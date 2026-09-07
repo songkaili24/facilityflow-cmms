@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Building2, CalendarCheck, ClipboardList, FileBarChart2, Wrench } from "lucide-react";
-import { NAV_ITEMS } from "./TopStatusBar";
+import { PRIMARY_NAV_ITEMS } from "./nav";
 import { useOpsMetrics } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -35,7 +35,7 @@ export function TabBar() {
       className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-charcoal-700 bg-charcoal-800 text-charcoal-100 md:hidden"
     >
       <ul className="grid grid-cols-5">
-        {NAV_ITEMS.map((item) => {
+        {PRIMARY_NAV_ITEMS.map((item: (typeof PRIMARY_NAV_ITEMS)[number]) => {
           const Icon = NAV_ICONS[item.href] ?? ClipboardList;
           const activeItem = pathname.startsWith(item.href);
           const isWorkOrders = item.href === "/workorders";
