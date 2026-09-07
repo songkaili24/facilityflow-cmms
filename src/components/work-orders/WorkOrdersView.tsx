@@ -1,164 +1,108 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { X } from "lucide-react";
+import { useState } from "react";
+import { Kanban as KanbanIcon, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { useToast } from "@/components/ui/Toast";
-import { FilterChips } from "./FilterChips";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { useOpsStore, filterWorkOrders } from "@/lib/store";
+import { useTechnicianLookup } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
+import { FilterBar } from "./FilterBar";
 import { KanbanBoard } from "./KanbanBoard";
+import { NewWorkOrderModal } from "./NewWorkOrderModal";
 import { WorkOrderCard } from "./WorkOrderCard";
-import { WorkOrderDetail } from "./WorkOrderDetail";
-import { PRIORITY_META } from "@/lib/statuses";
-import { useOpsStore } from "@/lib/store";
-import { useWorkOrders } from "@/lib/hooks";
-import type { WorkOrder } from "@/lib/types";
+import { WorkOrderListTable } from "./WorkOrderListTable";
 
+type BoardView = "kanban" | "list";
+
+/** /workorders — dispatch board: kanban + list views, search, filters, intake. */
 export function WorkOrdersView() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { toast } = useToast();
+  const workOrders = useOpsStore((s) => s.workOrders);
+  const filters = useOpsStore((s) => s.filters);
+  const setQuery = useOpsStore((s) => s.setQuery);
+  const { technicianName } = useTechnicianLookup();
 
-  const { workOrders } = useWorkOrders();
-  const filter = useOpsStore((s) => s.filter);
+  const [view, setView] = useState<BoardView>("kanban");
+  const [createOpen, setCreateOpen] = useState(false);
 
-  const [selected, setSelected] = useState<WorkOrder | null>(null);
-  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
-
-  // Deep link: /work-orders?wo=WO-2041 opens the split view preloaded.
-  useEffect(() => {
-    const number = searchParams.get("wo");
-    if (!number) return;
-    const match = workOrders.find((wo) => wo.number === number);
-    if (match) setSelected(match);
-  }, [searchParams, workOrders]);
-
-  const filtered = workOrders
-    .filter((wo) => (filter === "active" ? wo.status !== "completed" : true))
-    .filter((wo) => (filter === "all" || filter === "active" ? true : wo.category === filter))
-    .sort(
-      (a, b) =>
-        PRIORITY_META[a.priority].rank - PRIORITY_META[b.priority].rank ||
-        a.number.localeCompare(b.number)
-    );
-
-  const openDetail = (wo: WorkOrder) => {
-    setSelected(wo);
-    setMobileDetailOpen(true);
-    router.replace(`/work-orders?wo=${wo.number}`, { scroll: false });
-  };
-
-  const closeDetail = () => {
-    setSelected(null);
-    setMobileDetailOpen(false);
-    router.replace("/work-orders", { scroll: false });
-  };
+  const filtered = filterWorkOrders(workOrders, filters, technicianName);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl font-bold">Active Work Orders</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Swipe a card right to advance status · tap to open the split view
+          <p className="mt-1 text-sm text-muted-foreground" suppressHydrationWarning>
+            {filtered.length} of {workOrders.length} shown · drag cards to update status
           </p>
         </div>
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={() =>
-            toast({
-              title: "New work order intake",
-              description: "Request form opens with the dispatcher module.",
-              variant: "info",
-            })
-          }
-        >
+        <Button variant="primary" size="md" onClick={() => setCreateOpen(true)}>
+          <Plus aria-hidden className="mr-2 h-5 w-5" />
           New Work Order
         </Button>
       </div>
 
-      <FilterChips />
+      <SearchInput
+        value={filters.query}
+        onChange={setQuery}
+        label="Search work orders by ID, title, or location"
+        placeholder="Search WO #, title, building, floor, zone, room…"
+      />
 
-      {/* Mobile: swipeable card list (hidden ≥ md) */}
-      <div className="grid gap-3 md:hidden" aria-label="Work order list">
-        {filtered.map((wo) => (
-          <WorkOrderCard key={wo.id} workOrder={wo} onOpen={openDetail} />
-        ))}
-        {filtered.length === 0 && (
-          <p className="rounded-xl bg-card p-6 text-center text-sm text-muted-foreground shadow-card">
-            No work orders match this filter.
-          </p>
-        )}
-      </div>
+      <FilterBar />
 
-      {/* Desktop: kanban board + split-view detail (hidden < md) */}
-      <div className="hidden gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px]">
-        <KanbanBoard workOrders={filtered} onSelect={setSelected} selectedId={selected?.id} />
-        <aside className="sticky top-24 max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-card">
-          {selected ? (
-            <WorkOrderDetail workOrder={selected} />
-          ) : (
-            <div className="grid min-h-64 place-items-center text-center">
-              <div>
-                <p className="font-heading text-lg font-bold text-charcoal-700">
-                  Select a work order
-                </p>
-                <p className="mt-1 max-w-56 text-sm text-muted-foreground">
-                  Click a card on the board to review scope, checklist, and field notes here.
-                </p>
-              </div>
-            </div>
+      <div
+        role="group"
+        aria-label="View mode"
+        className="inline-flex rounded-lg border border-input bg-card p-1"
+      >
+        <button
+          type="button"
+          onClick={() => setView("kanban")}
+          aria-pressed={view === "kanban"}
+          className={cn(
+            "focus-ring inline-flex min-h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold",
+            view === "kanban" ? "bg-charcoal-800 text-white" : "text-charcoal-600 hover:bg-muted"
           )}
-        </aside>
-      </div>
-
-      {/* Tablet (< lg): stacked detail sheet below the board is omitted — md–lg
-          users get the mobile card flow. Detail opens as a full-screen sheet. */}
-      {mobileDetailOpen && selected && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${selected.number} detail`}
-          className="fixed inset-0 z-50 animate-fade-in overflow-y-auto bg-background"
         >
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card px-4 py-3">
-            <span className="font-mono text-sm font-bold text-charcoal-500">{selected.number}</span>
-            <Button variant="ghost" size="md" onClick={closeDetail} aria-label="Close detail view">
-              <X aria-hidden className="h-5 w-5" />
-              Close
-            </Button>
-          </div>
-          <div className="mx-auto max-w-2xl p-4 pb-28">
-            <WorkOrderDetail workOrder={selected} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Suspense fallback shown while the deep-link param resolves. */
-export function WorkOrdersFallback() {
-  return (
-    <div className="space-y-4" aria-busy="true" aria-label="Loading work orders">
-      <div className="h-9 w-72 animate-pulse rounded-lg bg-muted" />
-      <div className="flex gap-2">
-        {[64, 80, 72, 96, 88, 76].map((w, i) => (
-          <div key={i} className="h-12 animate-pulse rounded-full bg-muted" style={{ width: w }} />
-        ))}
+          <KanbanIcon aria-hidden className="h-4 w-4" />
+          Board
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("list")}
+          aria-pressed={view === "list"}
+          className={cn(
+            "focus-ring inline-flex min-h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold",
+            view === "list" ? "bg-charcoal-800 text-white" : "text-charcoal-600 hover:bg-muted"
+          )}
+        >
+          <List aria-hidden className="h-4 w-4" />
+          List
+        </button>
       </div>
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-36 animate-pulse rounded-xl bg-muted" />
-      ))}
-    </div>
-  );
-}
 
-export function WorkOrdersPageClient() {
-  return (
-    <Suspense fallback={<WorkOrdersFallback />}>
-      <WorkOrdersView />
-    </Suspense>
+      {filtered.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-charcoal-200 bg-card p-10 text-center text-sm text-muted-foreground shadow-card">
+          No work orders match the current search and filters.
+        </p>
+      ) : view === "kanban" ? (
+        <>
+          <div className="hidden lg:block">
+            <KanbanBoard workOrders={filtered} />
+          </div>
+          {/* Mobile: stacked cards in priority order */}
+          <div className="grid gap-3 lg:hidden" aria-label="Work order cards">
+            {filtered.map((wo) => (
+              <WorkOrderCard key={wo.id} workOrder={wo} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <WorkOrderListTable workOrders={filtered} />
+      )}
+
+      <NewWorkOrderModal open={createOpen} onClose={() => setCreateOpen(false)} />
+    </div>
   );
 }
