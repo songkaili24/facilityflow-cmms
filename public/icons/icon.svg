@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FacilityFlow logo">
+  <rect width="512" height="512" rx="112" fill="#1E293B"/>
+  <rect x="64" y="96" width="384" height="320" rx="24" fill="none" stroke="#F8FAFC" stroke-width="28"/>
+  <path d="M64 224h384" stroke="#F8FAFC" stroke-width="28"/>
+  <path d="M256 224v192" stroke="#F8FAFC" stroke-width="28"/>
+  <path d="M96 160h72M96 192h120" stroke="#F97316" stroke-width="28" stroke-linecap="round"/>
+  <path d="M300 336l52-52 60 60-52 52z" fill="#F97316"/>
+</svg>
