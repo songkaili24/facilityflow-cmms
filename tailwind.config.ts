@@ -80,11 +80,21 @@ const config: Config = {
           "0%": { boxShadow: "0 0 0 0 rgba(239, 68, 68, 0.55)" },
           "100%": { boxShadow: "0 0 0 14px rgba(239, 68, 68, 0)" },
         },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
+        },
+        "step-pop": {
+          "0%": { transform: "scale(0.5)", opacity: "0.4" },
+          "70%": { transform: "scale(1.12)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.2s ease-out",
         "slide-up": "slide-up 0.25s ease-out",
         "pulse-ring": "pulse-ring 1.5s ease-out infinite",
+        shimmer: "shimmer 1.4s ease-in-out infinite",
+        "step-pop": "step-pop 0.35s ease-out",
       },
     },
   },

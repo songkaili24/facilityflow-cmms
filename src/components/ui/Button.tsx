@@ -32,7 +32,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ref={ref}
       type={type}
       className={cn(
-        "focus-ring inline-flex select-none items-center justify-center whitespace-nowrap rounded-lg font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50",
+        // Gloved-hand press states: full transform transition + tactile scale
+        // (motion-reduce users get color feedback only via the global rule).
+        "focus-ring inline-flex touch-manipulation select-none items-center justify-center whitespace-nowrap rounded-lg font-semibold transition active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 motion-reduce:active:scale-100",
         variantClasses[variant],
         sizeClasses[size],
         className
