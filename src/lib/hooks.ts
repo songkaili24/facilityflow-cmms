@@ -12,7 +12,9 @@ import { useOpsStore } from "./store";
  */
 
 const vendorFetcher = async (): Promise<typeof VENDORS> => {
-  await new Promise((resolve) => setTimeout(resolve, 120));
+  // Demo latency window: long enough for the skeleton loaders to be
+  // exercised on real routes, short enough not to feel slow.
+  await new Promise((resolve) => setTimeout(resolve, 450));
   return VENDORS;
 };
 
@@ -29,6 +31,21 @@ export function usePmTasks() {
 export function useAssets() {
   const assets = useOpsStore((s) => s.assets);
   return { assets };
+}
+
+export function useInventory() {
+  const inventory = useOpsStore((s) => s.inventory);
+  return { inventory };
+}
+
+/** Brief loading window so skeleton loaders are exercisable on real routes. */
+export function useSimulatedLoading(delayMs = 250): boolean {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), delayMs);
+    return () => clearTimeout(t);
+  }, [delayMs]);
+  return loading;
 }
 
 export function useAssetLookup() {
