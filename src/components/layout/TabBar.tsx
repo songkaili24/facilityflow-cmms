@@ -9,16 +9,16 @@ import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
 const NAV_ICONS: Record<string, LucideIcon> = {
-  "/work-orders": ClipboardList,
-  "/preventive-maintenance": CalendarCheck,
+  "/workorders": ClipboardList,
+  "/preventive": CalendarCheck,
   "/vendors": Wrench,
   "/assets": Building2,
   "/reports": FileBarChart2,
 };
 
 const SHORT_LABELS: Record<string, string> = {
-  "/work-orders": "Work",
-  "/preventive-maintenance": "PM",
+  "/workorders": "Work",
+  "/preventive": "PM",
   "/vendors": "Vendors",
   "/assets": "Assets",
   "/reports": "Reports",
@@ -38,7 +38,7 @@ export function TabBar() {
         {NAV_ITEMS.map((item) => {
           const Icon = NAV_ICONS[item.href] ?? ClipboardList;
           const activeItem = pathname.startsWith(item.href);
-          const isWorkOrders = item.href === "/work-orders";
+          const isWorkOrders = item.href === "/workorders";
           return (
             <li key={item.href} className="grid">
               <Link

@@ -25,9 +25,9 @@ const METRICS: Metric[] = [
     icon: <CheckCircle2 aria-hidden className="h-6 w-6" />,
   },
   {
-    label: "Avg. response time",
-    value: "2h 41m",
-    detail: "Critical calls averaged 48m",
+    label: "MTTR",
+    value: "3h 41m",
+    detail: "Mean time to repair — down 12% vs. July",
     tone: "neutral",
     icon: <Timer aria-hidden className="h-6 w-6" />,
   },

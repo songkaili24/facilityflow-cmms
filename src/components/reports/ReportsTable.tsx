@@ -2,16 +2,16 @@ const TRADE_REPORTS = [
   { trade: "HVAC", wo: 118, sla: 92.4, cost: "$48,200", top: "Chiller #2 high head pressure" },
   { trade: "Electrical", wo: 86, sla: 95.1, cost: "$31,750", top: "Parking deck lighting drivers" },
   { trade: "Plumbing", wo: 74, sla: 96.2, cost: "$22,980", top: "DHW booster seal replacement" },
-  { trade: "Elevators", wo: 41, sla: 97.8, cost: "$64,400", top: "Car 3 door detector faults" },
+  { trade: "Structural", wo: 41, sla: 97.8, cost: "$64,400", top: "Dock leveler apron spalling" },
   {
-    trade: "Fire & Life Safety",
+    trade: "Security",
     wo: 33,
     sla: 98.5,
     cost: "$18,120",
-    top: "Zone 12 trouble isolation",
+    top: "Lobby camera switch ports",
   },
-  { trade: "Janitorial", wo: 52, sla: 99.0, cost: "$9,400", top: "Lobby walk-off mat rotation" },
-  { trade: "General", wo: 33, sla: 90.8, cost: "$12,650", top: "Dock leveler 2 lock assembly" },
+  { trade: "Cleaning", wo: 52, sla: 99.0, cost: "$9,400", top: "Post-renovation detail cleans" },
+  { trade: "General", wo: 33, sla: 90.8, cost: "$12,650", top: "Door hardware adjustments" },
 ];
 
 export function ReportsTable() {

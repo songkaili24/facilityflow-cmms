@@ -13,7 +13,7 @@ export default function NotFound() {
           This route isn&apos;t in the building directory. Head back to active work orders and pick
           it up from there.
         </p>
-        <Link href="/work-orders">
+        <Link href="/workorders">
           <Button variant="primary" size="lg">
             Back to Work Orders
           </Button>

@@ -10,8 +10,8 @@ import { cn, initials } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
 const NAV_ICONS: Record<string, LucideIcon> = {
-  "/work-orders": ClipboardList,
-  "/preventive-maintenance": CalendarCheck,
+  "/workorders": ClipboardList,
+  "/preventive": CalendarCheck,
   "/vendors": Wrench,
   "/assets": Building2,
   "/reports": FileBarChart2,
@@ -22,8 +22,8 @@ export function Sidebar() {
   const { active, overdue } = useOpsMetrics();
 
   const counts: Record<string, number | undefined> = {
-    "/work-orders": active.length,
-    "/preventive-maintenance": undefined,
+    "/workorders": active.length,
+    "/preventive": undefined,
     "/vendors": undefined,
     "/assets": undefined,
     "/reports": undefined,

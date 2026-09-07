@@ -13,13 +13,13 @@ import { cn } from "@/lib/utils";
  * field. Transcription lands with the backend speech service.
  */
 export function VoiceMemoButton({ workOrderId }: { workOrderId: string }) {
-  const addNote = useOpsStore((s) => s.addNote);
+  const addComment = useOpsStore((s) => s.addComment);
   const { toast } = useToast();
   const [recording, setRecording] = useState(false);
 
   const stop = () => {
     setRecording(false);
-    addNote(workOrderId, "Voice memo captured — pending transcription.", "voice");
+    addComment(workOrderId, "Voice memo captured — pending transcription.");
     toast({
       title: "Voice memo saved",
       description: "Attached to the work order. Transcription queued.",

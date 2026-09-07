@@ -13,8 +13,8 @@ interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/work-orders", label: "Work Orders" },
-  { href: "/preventive-maintenance", label: "Preventive Maintenance" },
+  { href: "/workorders", label: "Work Orders" },
+  { href: "/preventive", label: "Preventive Maintenance" },
   { href: "/vendors", label: "Vendor Directory" },
   { href: "/assets", label: "Asset Registry" },
   { href: "/reports", label: "Reports" },

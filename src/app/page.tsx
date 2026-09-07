@@ -32,7 +32,7 @@ export default function LandingPage() {
           <span className="font-heading text-2xl font-bold tracking-tight">FacilityFlow</span>
         </div>
         <Link
-          href="/work-orders"
+          href="/workorders"
           className="tap-target focus-ring rounded-lg text-base font-semibold text-charcoal-200 hover:text-white"
         >
           Open the app →
@@ -53,7 +53,7 @@ export default function LandingPage() {
             signal.
           </p>
           <div className="mt-2 flex flex-col gap-4 sm:flex-row">
-            <Link href="/work-orders" className="sm:min-w-56">
+            <Link href="/workorders" className="sm:min-w-56">
               <Button variant="primary" size="lg" className="w-full">
                 Open Work Orders
               </Button>
