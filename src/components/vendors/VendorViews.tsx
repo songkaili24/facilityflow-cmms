@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -26,6 +26,15 @@ export function DispatchVendorModal({
   const dispatchVendor = useOpsStore((s) => s.dispatchVendor);
   const { toast } = useToast();
   const [selectedWo, setSelectedWo] = useState("");
+  const [ack, setAck] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+
+  // Re-sync the confirmation address each time a vendor is picked.
+  useEffect(() => {
+    setConfirmEmail(vendor?.email ?? "");
+    setAck(false);
+  }, [vendor]);
+  const emailFormatOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(confirmEmail.trim());
 
   const openJobs = useMemo(
     () =>
@@ -43,11 +52,11 @@ export function DispatchVendorModal({
 
   const dispatch = () => {
     const wo = workOrders.find((w) => w.id === selectedWo);
-    if (!wo) return;
+    if (!wo || !vendor || !ack || !emailFormatOk) return;
     dispatchVendor(wo.id, vendor.id);
     toast({
       title: `${vendor.name} dispatched`,
-      description: `${wo.number} assigned — ${vendor.contactName} paged. Response target ${vendor.responseTargetHours}h.`,
+      description: `${wo.number} assigned — confirmation sent to ${confirmEmail.trim()}. Response SLA acknowledged (${vendor.responseTargetHours}h).`,
       variant: "success",
     });
     setSelectedWo("");
@@ -93,11 +102,57 @@ export function DispatchVendorModal({
           </select>
         </label>
 
+        {selectedWo && (
+          <div className="mt-4 space-y-3 rounded-lg border border-border bg-muted/50 p-4">
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-charcoal-600">
+                Dispatch confirmation email
+              </span>
+              <input
+                type="email"
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
+                aria-invalid={!emailFormatOk}
+                className={
+                  emailFormatOk
+                    ? "focus-ring min-h-12 w-full rounded-lg border border-input bg-card px-3 text-base"
+                    : "focus-ring min-h-12 w-full rounded-lg border border-danger bg-card px-3 text-base"
+                }
+                required
+              />
+              {!emailFormatOk && confirmEmail.length > 0 && (
+                <span className="mt-1 block text-sm font-medium text-danger">
+                  Enter a valid contact email (name@company.com).
+                </span>
+              )}
+            </label>
+
+            <label className="flex min-h-12 items-start gap-3 rounded-lg border border-warning/50 bg-warning/10 p-3">
+              <input
+                type="checkbox"
+                checked={ack}
+                onChange={(e) => setAck(e.target.checked)}
+                className="mt-1 h-5 w-5"
+                required
+              />
+              <span className="text-sm leading-snug text-charcoal-700">
+                I acknowledge the {vendor.responseTargetHours}-hour on-site response SLA for{" "}
+                {vendor.name} and the emergency escalation terms of the service contract.
+              </span>
+            </label>
+          </div>
+        )}
+
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button variant="outline" size="lg" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" size="lg" onClick={dispatch} disabled={!selectedWo}>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={dispatch}
+            disabled={!selectedWo || !ack || !emailFormatOk}
+          >
             <Wrench aria-hidden className="mr-2 h-5 w-5" />
             Dispatch
           </Button>
