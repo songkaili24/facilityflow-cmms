@@ -1,36 +1,113 @@
-/* Domain model for FacilityFlow. Aligned with common CMMS vocabulary. */
+/* Domain model for FacilityFlow — v2 (structured locations, technicians,
+   activity timelines, parts, and richer PM/vendor records). */
 
-export type WorkOrderStatus = "new" | "assigned" | "in_progress" | "on_hold" | "completed";
-
-export type WorkOrderPriority = "critical" | "high" | "medium" | "low";
+/* ------------------------------- taxonomy ------------------------------- */
 
 export type WorkOrderCategory =
-  | "HVAC"
-  | "Electrical"
-  | "Plumbing"
-  | "Elevators"
-  | "Fire & Life Safety"
-  | "Janitorial"
-  | "General";
+  "HVAC" | "Plumbing" | "Electrical" | "Structural" | "Cleaning" | "Security" | "General" | "Other";
 
 export const WORK_ORDER_CATEGORIES: readonly WorkOrderCategory[] = [
   "HVAC",
-  "Electrical",
   "Plumbing",
-  "Elevators",
-  "Fire & Life Safety",
-  "Janitorial",
+  "Electrical",
+  "Structural",
+  "Cleaning",
+  "Security",
   "General",
+  "Other",
+] as const;
+
+export type WorkOrderPriority = "critical" | "high" | "medium" | "low";
+
+export type WorkOrderStatus =
+  "reported" | "assigned" | "in_progress" | "awaiting_parts" | "completed" | "verified";
+
+export type VendorSpecialty =
+  "HVAC" | "Electrical" | "Plumbing" | "Elevator" | "Fire Safety" | "Landscaping";
+
+export type PmFrequency = "Daily" | "Weekly" | "Monthly" | "Quarterly" | "Semi-Annual" | "Annual";
+
+export const PM_FREQUENCIES: readonly PmFrequency[] = [
+  "Daily",
+  "Weekly",
+  "Monthly",
+  "Quarterly",
+  "Semi-Annual",
+  "Annual",
 ] as const;
 
 export type AssetCriticality = "critical" | "high" | "medium" | "low";
 
-export interface WorkOrderNote {
+export type WarrantyStatus = "Active" | "Expiring" | "Expired" | "None";
+
+/* ------------------------------- location ------------------------------- */
+
+export interface Location {
+  building: string;
+  floor: string;
+  zone?: string;
+  room?: string;
+}
+
+export const BUILDINGS: readonly string[] = ["Building A", "Building B", "Central Plant"] as const;
+
+export const FLOORS_BY_BUILDING: Record<string, readonly string[]> = {
+  "Building A": ["Basement (B1)", "1", "3", "5", "9", "12", "Roof"],
+  "Building B": ["Basement (B1)", "1", "4", "Roof"],
+  "Central Plant": ["Basement (B1)"],
+};
+
+export const ZONES: readonly string[] = [
+  "Zone 1 — North",
+  "Zone 2 — Core",
+  "Zone 3 — South",
+] as const;
+
+/* ------------------------------ technicians ------------------------------ */
+
+export type Shift = "Day (07:00–15:30)" | "Swing (15:00–23:30)" | "Night (23:00–07:30)";
+
+export interface Technician {
   id: string;
-  author: string;
-  body: string;
-  createdAt: string;
-  source: "typed" | "voice";
+  name: string;
+  role: string;
+  shift: Shift;
+  phone: string;
+  email: string;
+  specialties: WorkOrderCategory[];
+  /** Hue (0–360) used to derive the avatar color. */
+  hue: number;
+}
+
+/* ------------------------------- work order ------------------------------ */
+
+export interface PartLine {
+  id: string;
+  name: string;
+  qty: number;
+  unitCost: number;
+  status: "on_hand" | "ordered" | "backordered";
+}
+
+export type TimelineEntryType = "status" | "comment" | "photo" | "assignment";
+
+export interface TimelineEntry {
+  id: string;
+  at: string;
+  type: TimelineEntryType;
+  actor: string;
+  /** For status changes: previous status. */
+  from?: string;
+  /** For status changes: new status. */
+  to?: string;
+  /** For comments / photo notes. */
+  message?: string;
+  photoCount?: number;
+}
+
+export interface PhotoPlaceholder {
+  id: string;
+  caption: string;
 }
 
 export interface WorkOrder {
@@ -41,72 +118,88 @@ export interface WorkOrder {
   status: WorkOrderStatus;
   priority: WorkOrderPriority;
   category: WorkOrderCategory;
-  location: string;
-  floor: string;
-  assetTag: string | null;
-  requestedBy: string;
-  assignedVendor: string | null;
-  assignedTechnician: string | null;
-  createdAt: string;
-  scheduledFor: string | null;
-  completedAt: string | null;
-  slaDueAt: string | null;
+  location: Location;
+  assetId: string | null;
+  reportedBy: string;
+  reportedAt: string;
+  dueAt: string;
+  assigneeId: string | null;
+  vendorId: string | null;
   isEmergency: boolean;
-  checklist: WorkOrderChecklistItem[];
-  notes: WorkOrderNote[];
+  parts: PartLine[];
+  timeline: TimelineEntry[];
+  photos: PhotoPlaceholder[];
+  completedAt: string | null;
 }
 
-export interface WorkOrderChecklistItem {
-  id: string;
-  label: string;
-  done: boolean;
+export interface WorkOrderDraft {
+  title: string;
+  category: WorkOrderCategory;
+  priority: WorkOrderPriority;
+  location: Location;
+  description: string;
+  assigneeId: string | null; // null = auto-assign
+  dueAt: string;
+  photoCount: number;
 }
 
-export interface PreventiveMaintenanceTask {
+/* --------------------------- preventive maintenance ---------------------- */
+
+export interface PmCompletionRecord {
+  completedAt: string;
+  completedBy: string;
+  notes: string;
+}
+
+export interface PmTask {
   id: string;
   number: string;
   title: string;
-  assetTag: string;
-  assetName: string;
-  category: WorkOrderCategory;
-  frequency: "Weekly" | "Monthly" | "Quarterly" | "Semi-Annual" | "Annual";
+  taskType: string;
+  frequency: PmFrequency;
+  assetId: string;
+  assignedTechId: string | null;
+  vendorId: string | null;
   nextDue: string;
-  assignedVendor: string | null;
-  estimatedHours: number;
-  lastCompleted: string | null;
+  estHours: number;
+  history: PmCompletionRecord[];
 }
+
+/* --------------------------------- vendors ------------------------------- */
 
 export interface Vendor {
   id: string;
   name: string;
-  trades: WorkOrderCategory[];
+  specialty: VendorSpecialty;
   contactName: string;
   phone: string;
   email: string;
-  rating: number;
-  slaResponseHours: number;
-  preferred: boolean;
+  rating: number; // 0–5
+  responseTargetHours: number;
+  avgResponseHours: number;
+  slaCompliancePct: number;
+  qualityScore: number; // 0–100
+  completedJobs90d: number;
+  contractStatus: "Active" | "Renewal due" | "Expiring";
   contractEnd: string;
 }
+
+/* --------------------------------- assets -------------------------------- */
 
 export interface BuildingAsset {
   id: string;
   tag: string;
   name: string;
   category: WorkOrderCategory;
-  location: string;
-  floor: string;
-  criticality: AssetCriticality;
+  location: Location;
   manufacturer: string;
   model: string;
-  installedYear: number;
+  installedAt: string;
   warrantyEnds: string | null;
-  lastServiceDate: string | null;
-  openWorkOrderCount: number;
+  lastServiceAt: string | null;
+  criticality: AssetCriticality;
 }
 
-export interface ShiftSession {
-  engineer: string;
-  role: string;
-  shift: "Day (07:00–15:30)" | "Swing (15:00–23:30)" | "Night (23:00–07:30)";
-}
+/* -------------------------------- session -------------------------------- */
+
+export const CURRENT_USER_TECH_ID = "tech-reyes";
