@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Kanban as KanbanIcon, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useOpsStore, filterWorkOrders } from "@/lib/store";
-import { useTechnicianLookup } from "@/lib/hooks";
+import { useSimulatedLoading, useTechnicianLookup } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { FilterBar } from "./FilterBar";
 import { KanbanBoard } from "./KanbanBoard";
@@ -22,6 +23,7 @@ export function WorkOrdersView() {
   const setQuery = useOpsStore((s) => s.setQuery);
   const { technicianName } = useTechnicianLookup();
 
+  const loading = useSimulatedLoading(350);
   const [view, setView] = useState<BoardView>("kanban");
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -82,7 +84,9 @@ export function WorkOrdersView() {
         </button>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <WorkOrdersSkeleton />
+      ) : filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-charcoal-200 bg-card p-10 text-center text-sm text-muted-foreground shadow-card">
           No work orders match the current search and filters.
         </p>
@@ -103,6 +107,38 @@ export function WorkOrdersView() {
       )}
 
       <NewWorkOrderModal open={createOpen} onClose={() => setCreateOpen(false)} />
+    </div>
+  );
+}
+
+function WorkOrdersSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading work orders" className="space-y-3">
+      <div className="flex gap-4 overflow-hidden">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="w-72 shrink-0 space-y-3 rounded-xl bg-muted/40 p-3">
+            <Skeleton className="h-5 w-28" />
+            {[0, 1, 2].map((j) => (
+              <div
+                key={j}
+                className="space-y-2 rounded-lg border border-border bg-card p-3 shadow-card"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-14" />
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+                <div className="flex items-center gap-2 pt-1">
+                  <Skeleton rounded="full" className="h-7 w-7" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <span className="sr-only">Loading the dispatch board…</span>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
+import { OfflineBanner } from "./OfflineBanner";
 import { EmergencyDialog } from "./EmergencyDialog";
 import { Sidebar } from "./Sidebar";
 import { TabBar } from "./TabBar";
@@ -23,6 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <TopStatusBar onEmergency={() => setEmergencyOpen(true)} />
+          <OfflineBanner />
           <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-24 pt-4 sm:px-6 md:pb-10">
             {children}
           </main>

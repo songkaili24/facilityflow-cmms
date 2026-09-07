@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/formControls";
 import { useTechnicians } from "@/lib/hooks";
 import { useOpsStore } from "@/lib/store";
-import { SLA_HOURS, slaDueFrom, slaLabel } from "@/lib/sla";
+import { DEFAULT_SLA_HOURS, slaDueFrom, slaLabel } from "@/lib/sla";
 import {
   BUILDINGS,
   FLOORS_BY_BUILDING,
@@ -90,7 +90,10 @@ export function NewWorkOrderModal({ open, onClose }: { open: boolean; onClose: (
   const descValid = description.trim().length >= DESC_MIN;
   const locationValid = location !== null;
   const dueValid = dueAt !== "" && !Number.isNaN(new Date(dueAt).getTime());
-  const canSubmit = titleValid && descValid && locationValid && dueValid;
+  // Critical priority requires at least one intake photo for the
+  // escalation packet the duty supervisor receives.
+  const photoValid = priority !== "critical" || photoCount > 0;
+  const canSubmit = titleValid && descValid && locationValid && dueValid && photoValid;
 
   const autoAssignHint = useMemo(() => {
     const match = technicians.find((t) => t.specialties.includes(category));
@@ -217,7 +220,7 @@ export function NewWorkOrderModal({ open, onClose }: { open: boolean; onClose: (
           <fieldset>
             <legend className={fieldLabelClass}>Priority</legend>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {(Object.keys(SLA_HOURS) as WorkOrderPriority[]).map((p) => {
+              {(Object.keys(DEFAULT_SLA_HOURS) as WorkOrderPriority[]).map((p) => {
                 const selected = priority === p;
                 const bar =
                   p === "critical"
@@ -376,6 +379,19 @@ export function NewWorkOrderModal({ open, onClose }: { open: boolean; onClose: (
               />
               <p className="mt-1 text-xs text-charcoal-500">
                 Draw-on-photo annotation ships with the field tablet build.
+                {priority === "critical" && (
+                  <span
+                    className={
+                      photoCount > 0
+                        ? "block font-semibold text-success"
+                        : "block font-semibold text-danger"
+                    }
+                  >
+                    {photoCount > 0
+                      ? "Photo attached — critical priority requirement met."
+                      : "Critical priority requires at least one photo."}
+                  </span>
+                )}
               </p>
             </div>
 

@@ -26,11 +26,13 @@ interface KanbanBoardProps {
 /** Dispatch board — five status columns with drag-and-drop between them. */
 export function KanbanBoard({ workOrders }: KanbanBoardProps) {
   const [dragOver, setDragOver] = useState<WorkOrderStatus | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const setStatus = useOpsStore((s) => s.setStatus);
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-2">
       {KANBAN_COLUMNS.map(({ status, label }) => {
+        const isDropTarget = dragOver === status && draggingId !== null;
         const columnItems = workOrders
           .filter(
             (wo) => wo.status === status || (status === "completed" && wo.status === "verified")
@@ -51,14 +53,20 @@ export function KanbanBoard({ workOrders }: KanbanBoardProps) {
               const id = e.dataTransfer.getData("text/plain");
               if (id) setStatus(id, status);
               setDragOver(null);
+              setDraggingId(null);
             }}
             className={cn(
-              "flex w-72 shrink-0 flex-col rounded-xl border border-t-4 border-border bg-muted/40 lg:w-auto lg:shrink",
+              "flex w-72 shrink-0 flex-col rounded-xl border border-t-4 border-border bg-muted/40 transition-all duration-150 lg:w-auto lg:shrink",
               COLUMN_ACCENT[status],
-              dragOver === status && "ring-2 ring-accent ring-offset-2"
+              isDropTarget && "scale-[1.01] bg-accent/10 ring-2 ring-accent ring-offset-2"
             )}
           >
-            <header className="flex items-center gap-2 px-3 pb-2 pt-3">
+            <header
+              className={cn(
+                "flex items-center gap-2 px-3 pb-2 pt-3 transition-colors",
+                isDropTarget && "text-accent"
+              )}
+            >
               <StatusDot status={status} />
               <h2 className="font-heading text-sm font-bold uppercase tracking-widest text-charcoal-700">
                 {label}
@@ -69,13 +77,25 @@ export function KanbanBoard({ workOrders }: KanbanBoardProps) {
             </header>
             <div className="flex flex-1 flex-col gap-3 p-2">
               {columnItems.map((wo) => (
-                <KanbanCard key={wo.id} workOrder={wo} />
+                <KanbanCard
+                  key={wo.id}
+                  workOrder={wo}
+                  dragging={draggingId === wo.id}
+                  onDragStart={() => setDraggingId(wo.id)}
+                  onDragEnd={() => setDraggingId(null)}
+                />
               ))}
-              {columnItems.length === 0 && (
-                <p className="rounded-lg border-2 border-dashed border-charcoal-200 p-4 text-center text-xs font-semibold uppercase tracking-wide text-charcoal-300">
-                  Drop card here
-                </p>
-              )}
+              <p
+                aria-hidden
+                className={cn(
+                  "flex min-h-20 items-center justify-center rounded-lg border-2 border-dashed text-center text-xs font-semibold uppercase tracking-wide transition-colors",
+                  isDropTarget
+                    ? "border-accent bg-accent/5 text-accent"
+                    : "border-charcoal-200 text-charcoal-300"
+                )}
+              >
+                {isDropTarget ? `Drop into ${label}` : "Drop card here"}
+              </p>
             </div>
           </section>
         );
@@ -84,7 +104,17 @@ export function KanbanBoard({ workOrders }: KanbanBoardProps) {
   );
 }
 
-function KanbanCard({ workOrder: wo }: { workOrder: WorkOrder }) {
+function KanbanCard({
+  workOrder: wo,
+  dragging,
+  onDragStart,
+  onDragEnd,
+}: {
+  workOrder: WorkOrder;
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}) {
   const { technicianById } = useTechnicianLookup();
   const tech = technicianById(wo.assigneeId);
   const assignee = tech?.name ?? "Unassigned";
@@ -96,10 +126,13 @@ function KanbanCard({ workOrder: wo }: { workOrder: WorkOrder }) {
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", wo.id);
         e.dataTransfer.effectAllowed = "move";
+        onDragStart();
       }}
+      onDragEnd={onDragEnd}
       className={cn(
         "cursor-grab rounded-lg border border-border bg-card p-3 shadow-card active:cursor-grabbing",
-        overdue && "border-l-4 border-l-danger"
+        overdue && "border-l-4 border-l-danger",
+        dragging && "opacity-40 ring-2 ring-accent/60"
       )}
     >
       <a
