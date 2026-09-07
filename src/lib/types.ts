@@ -75,6 +75,8 @@ export interface Technician {
   phone: string;
   email: string;
   specialties: WorkOrderCategory[];
+  certifications: Certification[];
+  performance: TechnicianPerformance;
   /** Hue (0–360) used to derive the avatar color. */
   hue: number;
 }
@@ -203,3 +205,82 @@ export interface BuildingAsset {
 /* -------------------------------- session -------------------------------- */
 
 export const CURRENT_USER_TECH_ID = "tech-reyes";
+
+/* ------------------------------- inventory ------------------------------- */
+
+export type PartCategory =
+  "HVAC" | "Plumbing" | "Electrical" | "Filters" | "Fasteners" | "Safety" | "General";
+
+export const PART_CATEGORIES: readonly PartCategory[] = [
+  "HVAC",
+  "Plumbing",
+  "Electrical",
+  "Filters",
+  "Fasteners",
+  "Safety",
+  "General",
+] as const;
+
+export type StockStatus = "in_stock" | "low_stock" | "out_of_stock";
+
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  name: string;
+  category: PartCategory;
+  /** Units on hand in the main storeroom. */
+  quantity: number;
+  /** Stock at or below this level flags "low stock" / triggers reorder. */
+  reorderThreshold: number;
+  unit: string;
+  unitCost: number;
+  supplierId: string;
+  location: string;
+  updatedAt: string;
+}
+
+export function stockStatusOf(item: InventoryItem): StockStatus {
+  if (item.quantity === 0) return "out_of_stock";
+  if (item.quantity <= item.reorderThreshold) return "low_stock";
+  return "in_stock";
+}
+
+/* ---------------------------- technician certs --------------------------- */
+
+export interface Certification {
+  name: string;
+  number: string;
+  expiresAt: string | null;
+}
+
+export interface TechnicianPerformance {
+  completed30d: number;
+  avgCompletionHours: number;
+  firstTimeFixRatePct: number;
+  slaCompliancePct: number;
+}
+
+export interface TechnicianAssignment {
+  workOrderId: string;
+  since: string;
+}
+
+/* ------------------------------ SLA config ------------------------------- */
+
+export interface SlaTargets {
+  /** Hours to first response / acknowledgment. */
+  responseHours: number;
+  /** Hours to on-site arrival. */
+  arrivalHours: number;
+  /** Hours to resolution (work completed). */
+  resolutionHours: number;
+}
+
+export type SlaPolicy = Record<WorkOrderPriority, SlaTargets>;
+
+export const DEFAULT_SLA_POLICY: SlaPolicy = {
+  critical: { responseHours: 0.5, arrivalHours: 4, resolutionHours: 8 },
+  high: { responseHours: 1, arrivalHours: 8, resolutionHours: 24 },
+  medium: { responseHours: 4, arrivalHours: 24, resolutionHours: 72 },
+  low: { responseHours: 8, arrivalHours: 72, resolutionHours: 168 },
+};
