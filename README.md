@@ -1,115 +1,107 @@
 # FacilityFlow — CMMS for Commercial Building Operations
 
-A production-grade foundation for a computerized maintenance management system:
-work order tracking, preventive maintenance scheduling, vendor dispatch, and an
-asset registry — built mobile-first for building engineers working in the field,
-online or off.
+A production-grade CMMS demo for building operations teams: work order
+dispatch, preventive maintenance, vendor management, parts inventory, and an
+asset registry — built mobile-first for engineers working in mechanical rooms,
+on roofs, and everywhere the Wi-Fi doesn't reach.
 
-## Stack
+## Project overview
 
-| Concern   | Choice                                                       |
-| --------- | ------------------------------------------------------------ |
-| Framework | Next.js 14 (App Router), React 18, TypeScript strict mode    |
-| Styling   | Tailwind CSS 3.4 with CSS-variable design tokens             |
-| State     | Zustand (`src/lib/store.ts`) + SWR for the data layer        |
-| Quality   | ESLint (`next/core-web-vitals`), Prettier, `tsc --noEmit`    |
-| PWA       | Web manifest, service worker (`public/sw.js`), offline shell |
+FacilityFlow connects building engineers with maintenance vendors and tracks
+the full lifecycle of facility work:
 
-## Getting started
+- **Dispatch board** (`/workorders`) — five-column kanban with drag-and-drop
+  status transitions, list-table toggle, search, and multi-facet filters.
+- **Work order detail** (`/workorders/[id]`) — lifecycle stepper, activity
+  timeline, parts checklist with cost roll-up, live SLA countdown, and
+  one-tap field actions sized for gloved hands.
+- **Preventive maintenance** (`/preventive`) — month calendar with overdue
+  flags, recurring task scheduling, completion history, and PM-to-work-order
+  dispatch.
+- **Vendors** (`/vendors`) — specialty-filtered directory, performance
+  scorecards (SLA compliance, quality, response vs. target), contract status,
+  and a dispatch flow with SLA acknowledgment.
+- **Asset registry** (`/assets`) — equipment inventory with warranty tracking,
+  QR-tag placeholders, and per-asset maintenance history.
+- **Parts inventory** (`/inventory`) — stock levels against reorder
+  thresholds, supplier links, and validated storeroom requisitions.
+- **Technicians** (`/technicians`) — certifications, shift schedules, active
+  assignments, and 30-day performance metrics.
+- **SLA configuration** (`/sla-config`) — admin-defined response / on-site /
+  resolution targets per priority, enforced at work order intake.
+
+Demo data (Meridian Tower) ships in `src/lib/fixtures.ts`: 12 work orders,
+15 assets, 6 vendors, 8 PM tasks, 12 inventory SKUs, and 5 technicians.
+
+## Tech stack
+
+| Concern   | Choice                                                    |
+| --------- | --------------------------------------------------------- |
+| Framework | Next.js 14 (App Router), React 18, TypeScript strict mode |
+| Styling   | Tailwind CSS 3.4 with CSS-variable design tokens          |
+| State     | Zustand (`src/lib/store.ts`) + SWR for reference data     |
+| Quality   | ESLint (`next/core-web-vitals`), Prettier, `tsc --noEmit` |
+| Fonts     | Barlow (headings) + Inter (body) via `next/font`          |
+
+## Offline-first PWA architecture
+
+- **Installable** — `src/app/manifest.ts` generates a standalone web manifest
+  with theme colors and a maskable icon.
+- **Shell caching** — `public/sw.js` serves the app shell
+  stale-while-revalidate; navigations that fail fall back to
+  `public/offline.html`. Registered only in production builds
+  (`src/app/pwa-register.tsx`).
+- **Queued mutations** — every work order mutation stamps an entry in the
+  store's `pendingSync` map. That map is the integration point for an
+  IndexedDB write queue + background sync when the backend lands.
+- **Demo simulation** — the status-bar wifi toggle (and the yellow banner)
+  simulates offline mode so the queue-first UX can be reviewed without
+  actually leaving the network.
+
+## Field usability features
+
+- 48px minimum touch targets everywhere (`.tap-target` utility + `Button`
+  sizes), with `lg` (56px) as the gloved-hands default for field actions.
+- Press-state scale feedback on all buttons, suppressed under
+  `prefers-reduced-motion` (all animations are disabled globally too).
+- Safety-white `#F8FAFC` canvas, industrial-charcoal `#1E293B` chrome, and
+  safety-orange `#F97316` reserved for urgent actions; status colors always
+  paired with labels — never color alone.
+- Barlow for headings (industrial signage feel), Inter for body legibility.
+- Overdue/SLA-breach states render in red with explicit copy.
+- Mobile bottom tab bar (64px targets), desktop sidebar with a Manage group.
+
+## Setup
 
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm run build      # production build (all routes prerender static)
-npm run lint       # ESLint
-npm run format     # Prettier across the repo
+npm run build      # production build (all routes prerender)
+npm run lint       # ESLint (next/core-web-vitals)
+npm run format     # Prettier
 ```
 
-## Design system
+Node 18+ recommended. No environment variables are required for local
+development; see `.env.example` for the optional public-site URL.
 
-Design tokens live in `src/app/globals.css` (CSS variables) and are surfaced
-through Tailwind in `tailwind.config.ts`.
-
-| Token        | Value               | Use                                  |
-| ------------ | ------------------- | ------------------------------------ |
-| `background` | `#F8FAFC`           | Safety white — app canvas            |
-| `charcoal-*` | `#0F172A`–`#334155` | Industrial charcoal — chrome, nav    |
-| `accent`     | `#F97316`           | Safety orange — urgent actions, CTAs |
-| `success`    | `#22C55E`           | Completed work                       |
-| `warning`    | `#F59E0B`           | In-progress work                     |
-| `danger`     | `#EF4444`           | Critical/emergency, SLA breaches     |
-| `info`       | `#0EA5E9`           | Assigned/operational states          |
-
-- **Typography**: Barlow (`--font-barlow`) for headings via `font-heading`,
-  Inter (`--font-inter`) for body via `font-sans` (loaded with `next/font`).
-- **Touch targets**: the `.tap-target` utility enforces a ≥48px square; `Button`
-  sizes `md`/`lg` both clear the minimum, `lg` is the gloved-hands field size.
-- **Contrast**: charcoal-on-white for body text; status colors always paired
-  with labels or iconography, never color alone.
-
-## Component library (`src/components`)
-
-| Component             | File                                      | Notes                                                                   |
-| --------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
-| Button                | `ui/Button.tsx`                           | primary / secondary / outline / ghost / danger / success, `sm–lg` sizes |
-| Badge / PriorityBadge | `ui/Badge.tsx`                            | Critical, High, Medium, Low + status variants                           |
-| StatusIndicator       | `ui/StatusIndicator.tsx`                  | `StatusDot` + `StatusBadge`                                             |
-| Toast                 | `ui/Toast.tsx`                            | `ToastProvider` + `useToast()` — dispatch confirmations                 |
-| OfflineIndicator      | `ui/OfflineIndicator.tsx`                 | Online/Offline pill driven by `navigator.onLine`                        |
-| TopStatusBar          | `layout/TopStatusBar.tsx`                 | Connection state, open-WO count, emergency button, role/shift           |
-| Sidebar / TabBar      | `layout/Sidebar.tsx`, `layout/TabBar.tsx` | Desktop sidebar + mobile bottom tabs (5 sections)                       |
-| EmergencyDialog       | `layout/EmergencyDialog.tsx`              | Full dispatch flow with simulated paging + toast                        |
-| WorkOrderCard         | `work-orders/WorkOrderCard.tsx`           | Status, priority flag, checklist progress, **swipe right to advance**   |
-| ChecklistStepper      | `work-orders/ChecklistStepper.tsx`        | Interactive step-by-step progress (Stepper)                             |
-| FilterChips           | `work-orders/FilterChips.tsx`             | Category filters synced to the ops store                                |
-| KanbanBoard           | `work-orders/KanbanBoard.tsx`             | Desktop drag-and-drop across status columns                             |
-| WorkOrderDetail       | `work-orders/WorkOrderDetail.tsx`         | Desktop split view; mobile full-screen sheet                            |
-| PhotoCapture          | `field/PhotoCapture.tsx`                  | Camera capture with previews; annotation is a stub                      |
-| SignatureCapture      | `field/SignatureCapture.tsx`              | Pointer-event canvas signature                                          |
-| VoiceMemoButton       | `field/VoiceMemoButton.tsx`               | Mic recording with graceful fallback to a flagged note                  |
-| PmCalendar            | `pm/PmCalendar.tsx`                       | Month grid of PM tasks + mobile upcoming list + dispatch dialog         |
-
-## Data flow
-
-`src/lib/fixtures.ts` generates realistic Meridian Tower demo data (timestamps
-are relative to load, so SLAs are always "live"). `src/lib/hooks.ts` exposes
-SWR-backed hooks — `useWorkOrders`, `usePmTasks`, `useVendors`, `useAssets`,
-`useOpsMetrics` — that components consume. To wire a real backend, replace the
-`networkFetcher` switch with API route calls; no component changes needed.
-
-Mutations (status advance, checklist toggles, notes, PM dispatch) go through
-the Zustand ops store and flag entries in `pendingSync` — the hook point for
-offline queuing and sync.
-
-## PWA readiness
-
-- `src/app/manifest.ts` generates the web manifest (standalone display, theme
-  colors, maskable icon).
-- `public/sw.js` caches the shell stale-while-revalidate and serves
-  `public/offline.html` when a navigation fails offline.
-- `src/app/pwa-register.tsx` registers the worker in production builds.
-
-## Routes
+## Project layout
 
 ```
-/                        Landing / marketing page
-/workorders              Dispatch board: kanban (drag-and-drop) + list table, search,
-                         priority/category/status/assignee filters, New Work Order intake
-/workorders/[id]         Detail: status stepper (Reported→Verified), activity timeline,
-                         parts checklist with costs, SLA countdown, technician card,
-                         related WOs for the same asset, action buttons
-/preventive              PM calendar + upcoming list, overdue flags, Schedule PM form,
-                         PM history log, PM→work order dispatch
-/vendors                 Directory with specialty filter + search; profile pages add a
-                         performance scorecard, contract status, and Dispatch Vendor flow
-/assets                  Registry table with category/warranty filters, Add Asset form;
-                         profile pages show QR tag placeholder + maintenance history
-/reports                 Monthly operations roll-up (SLA, PM completion, MTTR) (server-rendered)
+src/
+├── app/                  # App Router pages ((app) group carries the shell)
+├── components/
+│   ├── ui/               # Button, Badge, Toast, Skeleton, Avatar, ...
+│   ├── layout/           # AppShell, status bar, sidebar, tab bar, nav.ts
+│   ├── work-orders/      # board, cards, detail, stepper, timeline, parts
+│   ├── pm/               # calendar, schedule form, history log
+│   ├── vendors/          # directory, profile, dispatch modal
+│   ├── assets/           # registry, add form, profile
+│   ├── inventory/        # stock table, requisition modal
+│   ├── technicians/      # directory, profile
+│   └── sla/              # SLA policy editor
+└── lib/                  # types, fixtures, store, hooks, sla, utils
 ```
 
-## Next steps for production
-
-1. Replace fixtures with API routes; add auth and role-gate the sidebar/status bar.
-2. Implement the offline queue against `pendingSync` (IndexedDB + background sync).
-3. Hook photo/signature/voice capture to object storage and the transcription service.
-4. Add Playwright smoke tests over the dispatch, advance-status, and emergency flows.
+Swap `src/lib/fixtures.ts` for API routes when the backend lands — components
+consume the SWR/store hooks in `src/lib/hooks.ts` and stay unchanged. See
+`CHANGELOG.md` for release history.
