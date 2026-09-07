@@ -7,13 +7,13 @@ online or off.
 
 ## Stack
 
-| Concern     | Choice                                                       |
-| ----------- | ------------------------------------------------------------ |
-| Framework   | Next.js 14 (App Router), React 18, TypeScript strict mode    |
-| Styling     | Tailwind CSS 3.4 with CSS-variable design tokens             |
-| State       | Zustand (`src/lib/store.ts`) + SWR for the data layer        |
-| Quality     | ESLint (`next/core-web-vitals`), Prettier, `tsc --noEmit`    |
-| PWA         | Web manifest, service worker (`public/sw.js`), offline shell |
+| Concern   | Choice                                                       |
+| --------- | ------------------------------------------------------------ |
+| Framework | Next.js 14 (App Router), React 18, TypeScript strict mode    |
+| Styling   | Tailwind CSS 3.4 with CSS-variable design tokens             |
+| State     | Zustand (`src/lib/store.ts`) + SWR for the data layer        |
+| Quality   | ESLint (`next/core-web-vitals`), Prettier, `tsc --noEmit`    |
+| PWA       | Web manifest, service worker (`public/sw.js`), offline shell |
 
 ## Getting started
 
@@ -30,15 +30,15 @@ npm run format     # Prettier across the repo
 Design tokens live in `src/app/globals.css` (CSS variables) and are surfaced
 through Tailwind in `tailwind.config.ts`.
 
-| Token            | Value     | Use                                      |
-| ---------------- | --------- | ---------------------------------------- |
-| `background`     | `#F8FAFC` | Safety white — app canvas                |
-| `charcoal-*`     | `#0F172A`–`#334155` | Industrial charcoal — chrome, nav |
-| `accent`         | `#F97316` | Safety orange — urgent actions, CTAs     |
-| `success`        | `#22C55E` | Completed work                           |
-| `warning`        | `#F59E0B` | In-progress work                         |
-| `danger`         | `#EF4444` | Critical/emergency, SLA breaches         |
-| `info`           | `#0EA5E9` | Assigned/operational states              |
+| Token        | Value               | Use                                  |
+| ------------ | ------------------- | ------------------------------------ |
+| `background` | `#F8FAFC`           | Safety white — app canvas            |
+| `charcoal-*` | `#0F172A`–`#334155` | Industrial charcoal — chrome, nav    |
+| `accent`     | `#F97316`           | Safety orange — urgent actions, CTAs |
+| `success`    | `#22C55E`           | Completed work                       |
+| `warning`    | `#F59E0B`           | In-progress work                     |
+| `danger`     | `#EF4444`           | Critical/emergency, SLA breaches     |
+| `info`       | `#0EA5E9`           | Assigned/operational states          |
 
 - **Typography**: Barlow (`--font-barlow`) for headings via `font-heading`,
   Inter (`--font-inter`) for body via `font-sans` (loaded with `next/font`).
@@ -49,25 +49,25 @@ through Tailwind in `tailwind.config.ts`.
 
 ## Component library (`src/components`)
 
-| Component            | File                              | Notes                                                  |
-| -------------------- | --------------------------------- | ------------------------------------------------------ |
-| Button               | `ui/Button.tsx`                   | primary / secondary / outline / ghost / danger / success, `sm–lg` sizes |
-| Badge / PriorityBadge| `ui/Badge.tsx`                    | Critical, High, Medium, Low + status variants          |
-| StatusIndicator      | `ui/StatusIndicator.tsx`          | `StatusDot` + `StatusBadge`                            |
-| Toast                | `ui/Toast.tsx`                    | `ToastProvider` + `useToast()` — dispatch confirmations |
-| OfflineIndicator     | `ui/OfflineIndicator.tsx`         | Online/Offline pill driven by `navigator.onLine`       |
-| TopStatusBar         | `layout/TopStatusBar.tsx`         | Connection state, open-WO count, emergency button, role/shift |
-| Sidebar / TabBar     | `layout/Sidebar.tsx`, `layout/TabBar.tsx` | Desktop sidebar + mobile bottom tabs (5 sections) |
-| EmergencyDialog      | `layout/EmergencyDialog.tsx`      | Full dispatch flow with simulated paging + toast       |
-| WorkOrderCard        | `work-orders/WorkOrderCard.tsx`   | Status, priority flag, checklist progress, **swipe right to advance** |
-| ChecklistStepper     | `work-orders/ChecklistStepper.tsx`| Interactive step-by-step progress (Stepper)            |
-| FilterChips          | `work-orders/FilterChips.tsx`     | Category filters synced to the ops store               |
-| KanbanBoard          | `work-orders/KanbanBoard.tsx`     | Desktop drag-and-drop across status columns            |
-| WorkOrderDetail      | `work-orders/WorkOrderDetail.tsx` | Desktop split view; mobile full-screen sheet           |
-| PhotoCapture         | `field/PhotoCapture.tsx`          | Camera capture with previews; annotation is a stub     |
-| SignatureCapture     | `field/SignatureCapture.tsx`      | Pointer-event canvas signature                         |
-| VoiceMemoButton      | `field/VoiceMemoButton.tsx`       | Mic recording with graceful fallback to a flagged note |
-| PmCalendar           | `pm/PmCalendar.tsx`               | Month grid of PM tasks + mobile upcoming list + dispatch dialog |
+| Component             | File                                      | Notes                                                                   |
+| --------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
+| Button                | `ui/Button.tsx`                           | primary / secondary / outline / ghost / danger / success, `sm–lg` sizes |
+| Badge / PriorityBadge | `ui/Badge.tsx`                            | Critical, High, Medium, Low + status variants                           |
+| StatusIndicator       | `ui/StatusIndicator.tsx`                  | `StatusDot` + `StatusBadge`                                             |
+| Toast                 | `ui/Toast.tsx`                            | `ToastProvider` + `useToast()` — dispatch confirmations                 |
+| OfflineIndicator      | `ui/OfflineIndicator.tsx`                 | Online/Offline pill driven by `navigator.onLine`                        |
+| TopStatusBar          | `layout/TopStatusBar.tsx`                 | Connection state, open-WO count, emergency button, role/shift           |
+| Sidebar / TabBar      | `layout/Sidebar.tsx`, `layout/TabBar.tsx` | Desktop sidebar + mobile bottom tabs (5 sections)                       |
+| EmergencyDialog       | `layout/EmergencyDialog.tsx`              | Full dispatch flow with simulated paging + toast                        |
+| WorkOrderCard         | `work-orders/WorkOrderCard.tsx`           | Status, priority flag, checklist progress, **swipe right to advance**   |
+| ChecklistStepper      | `work-orders/ChecklistStepper.tsx`        | Interactive step-by-step progress (Stepper)                             |
+| FilterChips           | `work-orders/FilterChips.tsx`             | Category filters synced to the ops store                                |
+| KanbanBoard           | `work-orders/KanbanBoard.tsx`             | Desktop drag-and-drop across status columns                             |
+| WorkOrderDetail       | `work-orders/WorkOrderDetail.tsx`         | Desktop split view; mobile full-screen sheet                            |
+| PhotoCapture          | `field/PhotoCapture.tsx`                  | Camera capture with previews; annotation is a stub                      |
+| SignatureCapture      | `field/SignatureCapture.tsx`              | Pointer-event canvas signature                                          |
+| VoiceMemoButton       | `field/VoiceMemoButton.tsx`               | Mic recording with graceful fallback to a flagged note                  |
+| PmCalendar            | `pm/PmCalendar.tsx`                       | Month grid of PM tasks + mobile upcoming list + dispatch dialog         |
 
 ## Data flow
 
@@ -92,12 +92,19 @@ offline queuing and sync.
 ## Routes
 
 ```
-/                         Landing / marketing page
-/work-orders              Dispatch board (mobile list + kanban, split view, ?wo= deep link)
-/preventive-maintenance   PM calendar + dispatch
-/vendors                  Vendor directory with SLAs and contact actions
-/assets                   Asset registry with criticality ratings
-/reports                  Monthly operations roll-up (server-rendered)
+/                        Landing / marketing page
+/workorders              Dispatch board: kanban (drag-and-drop) + list table, search,
+                         priority/category/status/assignee filters, New Work Order intake
+/workorders/[id]         Detail: status stepper (Reported→Verified), activity timeline,
+                         parts checklist with costs, SLA countdown, technician card,
+                         related WOs for the same asset, action buttons
+/preventive              PM calendar + upcoming list, overdue flags, Schedule PM form,
+                         PM history log, PM→work order dispatch
+/vendors                 Directory with specialty filter + search; profile pages add a
+                         performance scorecard, contract status, and Dispatch Vendor flow
+/assets                  Registry table with category/warranty filters, Add Asset form;
+                         profile pages show QR tag placeholder + maintenance history
+/reports                 Monthly operations roll-up (SLA, PM completion, MTTR) (server-rendered)
 ```
 
 ## Next steps for production
