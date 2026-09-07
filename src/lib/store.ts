@@ -1,8 +1,16 @@
 "use client";
 
 import { create } from "zustand";
-import { ASSETS, PM_TASKS, WORK_ORDERS } from "./fixtures";
-import type { BuildingAsset, PmTask, WorkOrder, WorkOrderDraft, WorkOrderStatus } from "./types";
+import { ASSETS, INVENTORY, PM_TASKS, WORK_ORDERS } from "./fixtures";
+import type {
+  BuildingAsset,
+  InventoryItem,
+  PmTask,
+  SlaPolicy,
+  WorkOrder,
+  WorkOrderDraft,
+  WorkOrderStatus,
+} from "./types";
 import { STATUS_META } from "./statuses";
 
 let seq = 2100;
@@ -39,6 +47,9 @@ interface OpsState {
   workOrders: WorkOrder[];
   pmTasks: PmTask[];
   assets: BuildingAsset[];
+  inventory: InventoryItem[];
+  slaPolicy: SlaPolicy | null;
+  offlineSimulated: boolean;
   filters: WorkOrderFilters;
   pendingSync: Record<string, number>;
 
@@ -55,6 +66,13 @@ interface OpsState {
   dispatchVendor: (workOrderId: string, vendorId: string) => void;
   markSynced: (id: string) => void;
 
+  requisitionPart: (
+    itemId: string,
+    quantity: number,
+    notes: string
+  ) => { ok: true; item: InventoryItem } | { ok: false; error: string };
+  updateSlaPolicy: (policy: SlaPolicy) => void;
+  toggleOfflineSimulated: () => void;
   schedulePm: (task: {
     title: string;
     taskType: string;
@@ -72,6 +90,9 @@ export const useOpsStore = create<OpsState>((set) => ({
   workOrders: WORK_ORDERS,
   pmTasks: PM_TASKS,
   assets: ASSETS,
+  inventory: INVENTORY,
+  slaPolicy: null,
+  offlineSimulated: false,
   filters: EMPTY_FILTERS,
   pendingSync: {},
 
@@ -246,6 +267,36 @@ export const useOpsStore = create<OpsState>((set) => ({
       delete next[id];
       return { pendingSync: next };
     }),
+
+  requisitionPart: (itemId, quantity, notes) => {
+    const item = INVENTORY.find((i) => i.id === itemId);
+    if (!item) return { ok: false, error: "Part not found in inventory." };
+    if (!Number.isFinite(quantity) || quantity < 1)
+      return { ok: false, error: "Quantity must be at least 1." };
+    if (quantity > item.quantity)
+      return {
+        ok: false,
+        error: `Requisition exceeds on-hand stock (${item.quantity} ${item.unit}). Split the request or place a supplier order.`,
+      };
+    set((s) => ({
+      inventory: s.inventory.map((inv) =>
+        inv.id === itemId
+          ? {
+              ...inv,
+              quantity: inv.quantity - quantity,
+              updatedAt: new Date().toISOString(),
+            }
+          : inv
+      ),
+      pendingSync: { ...s.pendingSync, [itemId]: Date.now() },
+    }));
+    void notes;
+    return { ok: true, item };
+  },
+
+  updateSlaPolicy: (policy) => set({ slaPolicy: policy }),
+
+  toggleOfflineSimulated: () => set((s) => ({ offlineSimulated: !s.offlineSimulated })),
 
   schedulePm: (task) => {
     pmSeq += 1;
