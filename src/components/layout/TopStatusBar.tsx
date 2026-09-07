@@ -1,28 +1,40 @@
 "use client";
 
-import { Siren, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Menu, Siren, UserRound, Wifi, WifiOff } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
 import { useOpsMetrics } from "@/lib/hooks";
+import { useOpsStore } from "@/lib/store";
 import { CURRENT_USER } from "@/lib/fixtures";
+import { PRIMARY_NAV_ITEMS, SECONDARY_NAV_ITEMS } from "./nav";
 import { cn } from "@/lib/utils";
-
-interface NavItem {
-  href: string;
-  label: string;
-}
-
-export const NAV_ITEMS: NavItem[] = [
-  { href: "/workorders", label: "Work Orders" },
-  { href: "/preventive", label: "Preventive Maintenance" },
-  { href: "/vendors", label: "Vendor Directory" },
-  { href: "/assets", label: "Asset Registry" },
-  { href: "/reports", label: "Reports" },
-];
 
 export function TopStatusBar({ onEmergency }: { onEmergency: () => void }) {
   const pathname = usePathname();
   const { active } = useOpsMetrics();
+  const offlineSimulated = useOpsStore((s) => s.offlineSimulated);
+  const toggleOfflineSimulated = useOpsStore((s) => s.toggleOfflineSimulated);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onClick);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onClick);
+    };
+  }, [menuOpen]);
 
   return (
     <header className="sticky top-0 z-40 bg-charcoal-800 text-charcoal-50 shadow-card">
@@ -44,6 +56,75 @@ export function TopStatusBar({ onEmergency }: { onEmergency: () => void }) {
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <OfflineIndicator />
+
+          {/* Offline simulation toggle (demo affordance for the PWA queue flow) */}
+          <button
+            type="button"
+            onClick={toggleOfflineSimulated}
+            aria-pressed={offlineSimulated}
+            aria-label={offlineSimulated ? "End offline simulation" : "Simulate offline mode"}
+            title={offlineSimulated ? "End offline simulation" : "Simulate offline mode"}
+            className={cn(
+              "focus-ring tap-target rounded-lg",
+              offlineSimulated
+                ? "bg-danger text-white"
+                : "text-charcoal-300 hover:bg-charcoal-700 hover:text-white"
+            )}
+          >
+            {offlineSimulated ? (
+              <WifiOff aria-hidden className="h-5 w-5" />
+            ) : (
+              <Wifi aria-hidden className="h-5 w-5" />
+            )}
+          </button>
+
+          {/* Secondary pages menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              aria-label="Open manage menu"
+              className={cn(
+                "focus-ring tap-target rounded-lg",
+                menuOpen
+                  ? "bg-charcoal-600 text-white"
+                  : "text-charcoal-300 hover:bg-charcoal-700 hover:text-white"
+              )}
+            >
+              <Menu aria-hidden className="h-5 w-5" />
+            </button>
+            {menuOpen && (
+              <nav
+                aria-label="Manage"
+                className="absolute right-0 top-[3.25rem] z-50 w-64 animate-fade-in rounded-xl border border-border bg-card p-2 shadow-popped"
+              >
+                <p className="px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-widest text-charcoal-400">
+                  Manage
+                </p>
+                {SECONDARY_NAV_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "focus-ring flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm font-semibold",
+                        isActive ? "bg-accent/10 text-accent" : "text-charcoal-700 hover:bg-muted"
+                      )}
+                    >
+                      <Icon aria-hidden className="h-5 w-5 shrink-0" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+            )}
+          </div>
 
           <button
             type="button"
@@ -78,22 +159,10 @@ export function TopStatusBar({ onEmergency }: { onEmergency: () => void }) {
       {/* Mobile section title strip */}
       <div className="border-t border-charcoal-700 px-4 pb-2 pt-1.5 md:hidden">
         <p className="font-heading text-base font-bold uppercase tracking-widest text-charcoal-300">
-          {NAV_ITEMS.find((i) => pathname.startsWith(i.href))?.label ?? "Overview"}
+          {[...PRIMARY_NAV_ITEMS, ...SECONDARY_NAV_ITEMS].find((i) => pathname.startsWith(i.href))
+            ?.label ?? "Overview"}
         </p>
       </div>
     </header>
-  );
-}
-
-export function NavCountBadge({ count, active }: { count: number; active: boolean }) {
-  return (
-    <span
-      className={cn(
-        "ml-auto rounded-full px-2 py-0.5 text-xs font-bold",
-        active ? "bg-safety-orange text-white" : "bg-charcoal-100 text-charcoal-700"
-      )}
-    >
-      {count}
-    </span>
   );
 }
