@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow, Inter } from "next/font/google";
 import { PwaRegister } from "./pwa-register";
+import { getSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,7 +18,7 @@ const barlow = Barlow({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(getSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)),
   title: {
     default: "FacilityFlow — CMMS for building operations",
     template: "%s | FacilityFlow",
